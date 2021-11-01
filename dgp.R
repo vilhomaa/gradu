@@ -26,6 +26,7 @@ replace_values_of_columns <- function(X,col_vector,replacing_fraction){
 }
 gen_data <- function(r_error_fraction,m_error_fraction,tau_error_fraction,n = 1000,seed = 1){
   
+  set.seed(seed)
   p <- 10
   r_independent_from_m <- TRUE
   
@@ -50,7 +51,7 @@ gen_data <- function(r_error_fraction,m_error_fraction,tau_error_fraction,n = 10
   Y <- ifelse(r>0.5,0,1)
   
   # check/fix
-  tau_prob <- transform_unbounded_interval_to_0_1(r_unedited + tau)  - transform_unbounded_interval_to_0_1(r_unedited)
+  tau_prob <- transform_unbounded_interval_to_0_1(rowSums(X[,r_variables]) + 0.8  + tau)  - transform_unbounded_interval_to_0_1(rowSums(X[,r_variables]) + 0.8)
   
   X <- replace_values_of_columns(X,r_variables,r_error_fraction)
   X <- replace_values_of_columns(X,m_variables,m_error_fraction)

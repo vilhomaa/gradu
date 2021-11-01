@@ -130,8 +130,8 @@ uplift_esitmate_summaries <- function(data,seed){
   
   # Classification metrics uplift modeling: identifying convinceable customers and "sleeping dogs"
   
-  convinceables_classified <- ifelse( test$r + test$tau_prob > 0.5 & test$r < 0.5,1,0) 
-  sleeping_dogs_classified <- ifelse(test$r + test$tau_prob < 0.5 & test$r >  0.5,1,0)
+  convinceables_classified <- ifelse(data$r - data$w*data$tau_prob < 0.5 & data$r + (1-data$w)*data$tau_prob > 0.5,1,0) 
+  sleeping_dogs_classified <- ifelse(data$r - data$w*data$tau_prob > 0.5 & data$r + (1-data$w)*data$tau_prob < 0.5,1,0)
   
   convinceables_test <- ifelse((1-r1_test) > 0.5 & (1-r0_test) < 0.5,1,0)
   sleeping_dogs_test <- ifelse((1-r1_test) < 0.5 & (1-r0_test) > 0.5,1,0)
