@@ -1,7 +1,7 @@
 
 rm(list = ls())
-setwd("Z:/skolarbete/gradu/R")
-load("results/results_2.RData")
+#setwd("Z:/skolarbete/gradu/R")
+load("results/cv30_fractions_3x3x2.RData")
 
 
 
@@ -13,15 +13,15 @@ for (var in ls(pattern = 'results_with')) {
 
 
 results <- list(
-  r_0.1_m_0.1  <-  results_with_error_fractions_r_0.1_m_0.1 ,
-  r_0.1_m_0.35  <-  results_with_error_fractions_r_0.1_m_0.35 ,
-  r_0.1_m_0.6  <-  results_with_error_fractions_r_0.1_m_0.6 ,
-  r_0.35_m_0.1  <-  results_with_error_fractions_r_0.35_m_0.1 ,
-  r_0.35_m_0.35  <-  results_with_error_fractions_r_0.35_m_0.35 ,
-  r_0.35_m_0.6  <-  results_with_error_fractions_r_0.35_m_0.6 ,
-  r_0.6_m_0.1  <-  results_with_error_fractions_r_0.6_m_0.1 ,
-  r_0.6_m_0.35  <-  results_with_error_fractions_r_0.6_m_0.35 ,
-  r_0.6_m_0.6  <-  results_with_error_fractions_r_0.6_m_0.6  # delete comma here
+  r_0.4_m_0  <-  results_with_error_fractions_r_0.4_m_0 ,
+  r_0.4_m_0.4  <-  results_with_error_fractions_r_0.4_m_0.4 ,
+  r_0.4_m_0.8  <-  results_with_error_fractions_r_0.4_m_0.8 ,
+  r_0.8_m_0  <-  results_with_error_fractions_r_0.8_m_0 ,
+  r_0.8_m_0.4  <-  results_with_error_fractions_r_0.8_m_0.4 ,
+  r_0.8_m_0.8  <-  results_with_error_fractions_r_0.8_m_0.8 ,
+  r_0_m_0  <-  results_with_error_fractions_r_0_m_0 ,
+  r_0_m_0.4  <-  results_with_error_fractions_r_0_m_0.4 ,
+  r_0_m_0.8  <-  results_with_error_fractions_r_0_m_0.8   # delete comma here
 )
 
 # holdoutprofit columns:
@@ -69,5 +69,5 @@ for (item in results) {
 }
 
 
-write.csv(profit_df,"resultsX.csv")
+write.csv(profit_df,"results_test.csv")
 

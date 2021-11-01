@@ -1,13 +1,9 @@
-library(vtable)
-library(uplift)
-library(gbm)
-library(caret)
 
 
 # Athey Wager 2021 "Policy Learning With Observational Data." data generating code 
 # https://github.com/grf-labs/policytree/blob/master/r-package/policytree/R/data.R
 
-setwd("Z:/skolarbete/gradu/R")
+#setwd("Z:/skolarbete/gradu/R")
 
 
 # Helper functions
