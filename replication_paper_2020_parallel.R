@@ -32,8 +32,8 @@ start_time <- Sys.time()
 n                     <- 2000 # rows in data to generate
 p                     <- 10   # Columns in generated data
 r_error_fractions     <- c(0,0.2,0.4,0.6,0.8) # What error fractions should datasets be generated with
-m_error_fractions     <- c(0,0.3,0.6,0.9) #  be generated with
-tau_error_fractions   <- c(0.1,0.9)
+m_error_fractions     <- c(0,1) #  be generated with
+tau_error_fractions   <- c(0.1,0.5,0.9)
 colnumbers.covariates <- 4:13 # indicates the position of all predictors
                               # excluding w (excludes w, y and revenues)
 pos.covariates        <- 3:13 # indicates the position (column number)
@@ -290,6 +290,10 @@ for (r_error_fraction in r_error_fractions) {
           m1.test = myliftproc$m0.test,
           verbose = FALSE
         )
+        
+        # POTENTIAL FIX FOR WRONG RSGB RESULTS!
+        myrsgbproc$scores.valid <- myrsgbproc$scores.valid*-1
+        myrsgbproc$scores.test <- myrsgbproc$scores.test*-1
       
         # 2. optimize target size in the validation sample
         # result: optimal target size, in percentage
@@ -707,7 +711,7 @@ for (r_error_fraction in r_error_fractions) {
         paste0(
           "results_with_error_fractions_r_",r_error_fraction,"_m_",m_error_fraction,'_tau_',tau_error_fraction),
         result_buffer_list)
-      save.image("results/cv30_fractions_5x4x2.RData", compress = TRUE)
+      save.image("results/cv30_fractions_5x2x3_nobs_2000.RData", compress = TRUE)
       
       end_time <- Sys.time()
       print(paste("Single fraction examination time elapsed:", round(end_time - start_time_fraction,2),"min"))
@@ -721,13 +725,13 @@ print('Total Time Elapsed:')
 end_time - start_time
 
 
-save.image("results/cv30_fractions_5x4x2.RData", compress = TRUE)
+save.image("results/cv30_fractions_5x2x3_nobs_2000.RData", compress = TRUE)
 
 
 
 
 
-
+stopImplicitCluster()
 
 
 
