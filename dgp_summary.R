@@ -130,15 +130,15 @@ uplift_esitmate_summaries <- function(data,seed){
   
   # Classification metrics uplift modeling: identifying convinceable customers and "sleeping dogs"
   
-  convinceables_classified <- ifelse(data$r - data$w*data$tau_prob < 0.5 & data$r + (1-data$w)*data$tau_prob > 0.5,1,0) 
-  sleeping_dogs_classified <- ifelse(data$r - data$w*data$tau_prob > 0.5 & data$r + (1-data$w)*data$tau_prob < 0.5,1,0)
+  convinceables_classified <- ifelse(test$r - test$w*test$tau_prob < 0.5 & test$r + (1-test$w)*test$tau_prob > 0.5,1,0) 
+  sleeping_dogs_classified <- ifelse(test$r - test$w*test$tau_prob > 0.5 & test$r + (1-test$w)*test$tau_prob < 0.5,1,0)
   
   convinceables_test <- ifelse((1-r1_test) > 0.5 & (1-r0_test) < 0.5,1,0)
   sleeping_dogs_test <- ifelse((1-r1_test) < 0.5 & (1-r0_test) > 0.5,1,0)
   
   
   convinceables_factor <- factor(convinceables_test)
-  levels(convinceables_factor) <- c(0,1) # Coercing predictions to have 2 levels
+  levels(convinceables_factor) <- c(0,1) # Coercing predictions to have 2 level: in some cases no convinceables are predicted
   cm = confusionMatrix(data = factor(convinceables_classified),reference =convinceables_factor) 
   
   
@@ -184,9 +184,10 @@ B <- 30
 df <- foreach(j=1:B,
         .verbose = TRUE,
         .packages = c('gbm','uplift','caret')) %dopar% {
-  r_fractions_to_loop <- seq(0,1,0.11)# c(0,1)
-  m_fractions_to_loop <- c(0,0.5,1)# seq(0,1,0.11)
-  tau_fractions_to_loop <- seq(0,1,0.11)# seq(0,1,0.11)
+  r_fractions_to_loop <- c(0,0.2,0.4,0.6,0.8) # c(0,1)
+  m_fractions_to_loop <- c(0,0.3,0.6,0.9) # seq(0,1,0.11)
+  tau_fractions_to_loop <- c(0.1,0.9) # seq(0,1,0.11)
+  n_to_loop <- c(1000,5000)
   seed <- j*B
   i <- 1
   summary_df <- data.frame()
@@ -194,49 +195,52 @@ df <- foreach(j=1:B,
   for (r_error_fraction in r_fractions_to_loop) {
     for (m_error_fraction in m_fractions_to_loop) {
       for (tau_error_fraction in tau_fractions_to_loop) {
-        
-        print(paste(i , 'th iteration out of ' , length(r_fractions_to_loop)*length(m_fractions_to_loop)*length(tau_fractions_to_loop)  ))
-        data_buffer_unedited <- gen_data(r_error_fraction,m_error_fraction,tau_error_fraction,2000,seed)
-        gbm_buffer <- get_gbm_classification_metrics(data.frame(data_buffer_unedited),seed)
-        uplift_buffer <- uplift_esitmate_summaries(data.frame(data_buffer_unedited),seed)
-        data_buffer <- list(
-          r_error_fraction = r_error_fraction,
-          m_error_fraction = m_error_fraction,
-          tau_error_fraction = tau_error_fraction,
-          y_mean = mean(data_buffer_unedited$y),
-          y_sd = sd(data_buffer_unedited$y),
-          m_mean = mean(data_buffer_unedited$revenues),
-          m_sd = sd(data_buffer_unedited$revenues),
-          r_mean = mean(data_buffer_unedited$r),
-          r_sd = sd(data_buffer_unedited$r),
-          tau_uplift_prob_mean = mean(data_buffer_unedited$tau_prob),
-          tau_uplift_prob_sd = sd(data_buffer_unedited$tau_prob),
-          accuracy = gbm_buffer$accuracy,
-          precision = gbm_buffer$precision,
-          sensitivity = gbm_buffer$sensitivity,
-          specificity = gbm_buffer$specificity,
-          auc = gbm_buffer$auc,
-          r0_mean = uplift_buffer$r0_mean,
-          r0_sd = uplift_buffer$r0_sd,
-          r1_mean = uplift_buffer$r1_mean,
-          r1_sd = uplift_buffer$r1_sd,
-          r_lift_sd = uplift_buffer$r_lift_sd,
-          m0_mean = uplift_buffer$m0_mean,
-          m0_sd = uplift_buffer$m0_sd,
-          m1_mean = uplift_buffer$m1_mean,
-          m1_sd = uplift_buffer$m1_sd,
-          profit_lift_mean = uplift_buffer$profit_lift_mean,
-          profit_lift_sd = uplift_buffer$profit_lift_sd,
-          auc_convinceables = uplift_buffer$auc_convinceables,
-          accuracy_convinceables = uplift_buffer$accuracy_convinceables,
-          sensitivity_convinceables = uplift_buffer$sensitivity_convinceables,
-          specificity_convinceables = uplift_buffer$specificity_convinceables,
-          precision_convinceables = uplift_buffer$precision_convinceables,
-          sleeping_dogs = uplift_buffer$sleeping_dogs
-        )
-        summary_df <- rbind(summary_df,data.frame(data_buffer) )
-        i <- i + 1
-        seed <- seed + 1
+        for (n in n_to_loop) {
+          print(paste(i , 'th iteration out of ' , length(r_fractions_to_loop)*length(m_fractions_to_loop)*length(tau_fractions_to_loop)  ))
+          data_buffer_unedited <- gen_data(r_error_fraction,m_error_fraction,tau_error_fraction,n)
+          gbm_buffer <- get_gbm_classification_metrics(data.frame(data_buffer_unedited),seed)
+          uplift_buffer <- uplift_esitmate_summaries(data.frame(data_buffer_unedited),seed)
+          data_buffer <- list(
+            r_error_fraction = r_error_fraction,
+            m_error_fraction = m_error_fraction,
+            tau_error_fraction = tau_error_fraction,
+            n_obs = n,
+            y_mean = mean(data_buffer_unedited$y),
+            y_sd = sd(data_buffer_unedited$y),
+            m_mean = mean(data_buffer_unedited$revenues),
+            m_sd = sd(data_buffer_unedited$revenues),
+            r_mean = mean(data_buffer_unedited$r),
+            r_sd = sd(data_buffer_unedited$r),
+            tau_uplift_prob_mean = mean(data_buffer_unedited$tau_prob),
+            tau_uplift_prob_sd = sd(data_buffer_unedited$tau_prob),
+            accuracy = gbm_buffer$accuracy,
+            precision = gbm_buffer$precision,
+            sensitivity = gbm_buffer$sensitivity,
+            specificity = gbm_buffer$specificity,
+            auc = gbm_buffer$auc,
+            r0_mean = uplift_buffer$r0_mean,
+            r0_sd = uplift_buffer$r0_sd,
+            r1_mean = uplift_buffer$r1_mean,
+            r1_sd = uplift_buffer$r1_sd,
+            r_lift_sd = uplift_buffer$r_lift_sd,
+            m0_mean = uplift_buffer$m0_mean,
+            m0_sd = uplift_buffer$m0_sd,
+            m1_mean = uplift_buffer$m1_mean,
+            m1_sd = uplift_buffer$m1_sd,
+            profit_lift_mean = uplift_buffer$profit_lift_mean,
+            profit_lift_sd = uplift_buffer$profit_lift_sd,
+            auc_convinceables = uplift_buffer$auc_convinceables,
+            accuracy_convinceables = uplift_buffer$accuracy_convinceables,
+            sensitivity_convinceables = uplift_buffer$sensitivity_convinceables,
+            specificity_convinceables = uplift_buffer$specificity_convinceables,
+            precision_convinceables = uplift_buffer$precision_convinceables,
+            sleeping_dogs = uplift_buffer$sleeping_dogs
+          )
+          summary_df <- rbind(summary_df,data.frame(data_buffer) )
+          i <- i + 1
+          seed <- seed + 1
+        }
+
       }
     }
   }
@@ -245,9 +249,9 @@ df <- foreach(j=1:B,
 
 summary_df <- bind_rows(df)
 
-save.image("results/dgp_summary_4_10x3x10_cv30.RData")
+save.image("results/dgp_summary_5x4x2x2_cv30.RData")
 
-write.csv(summary_df,"dgp_summary_4_10x3x10_cv30.csv",row.names = FALSE)
+write.csv(summary_df,"results/dgp_summary_5x4x2x2_cv30.csv",row.names = FALSE)
 
 
 
