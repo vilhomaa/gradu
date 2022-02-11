@@ -11,7 +11,7 @@ registerDoParallel(cores=8)
 
 library(devtools)
 load_all('ProfitBoost')
-source("dgp.R")
+source("dgp_y_from_binary_dist.R")
 start_time <- Sys.time()
 #-----------#
 # load data #
@@ -29,7 +29,7 @@ start_time <- Sys.time()
 
 
 # data specification
-n                     <- 2000 # rows in data to generate
+n                     <- 5000 # rows in data to generate
 p                     <- 10   # Columns in generated data
 r_error_fractions     <- c(0,0.2,0.4,0.6,0.8) # What error fractions should datasets be generated with
 m_error_fractions     <- c(0,1) #  be generated with
@@ -57,7 +57,7 @@ rho                   <- .001
 stoch                 <- TRUE
 ratio                 <- .3
 
-B                     <- 30 # change this number to get multiple iterations
+B                     <- 100 # change this number to get multiple iterations
 
 
 # Holdout profit for all methods, including symmetric,
@@ -102,20 +102,22 @@ suppressWarnings(RNGkind(sample.kind = "Rounding"))
 for (r_error_fraction in r_error_fractions) {
   for (m_error_fraction in m_error_fractions) {
     for (tau_error_fraction in tau_error_fractions) {
-      mysynthdata <- data.frame(gen_data(r_error_fraction,m_error_fraction,tau_error_fraction,n))
+      mysynthdata <- data.frame(gen_data(r_error_fraction,m_error_fraction,tau_error_fraction,n,3))
       start_time_fraction <- Sys.time()
       print(paste0('error fraction r:',r_error_fraction," error fraction m: ",m_error_fraction," error fraction tau: ",tau_error_fraction," cv iterations: ",B))
       
-      foreach_results_buffer <- foreach (b=1:B,
+      foreach_results_buffer <- foreach (g=1:B,
                                       .packages='devtools') %dopar% {
         load_all('ProfitBoost')
-        print(paste0('error fraction r:',r_error_fraction," error fraction m: ",m_error_fraction," error fraction tau: ",tau_error_fraction," cv iteration: ",b," out of ",B))
+        print(paste0('error fraction r:',r_error_fraction," error fraction m: ",m_error_fraction," error fraction tau: ",tau_error_fraction," cv iteration: ",g," out of ",B))
         
         # Variables that need to be defined within foreach
         holdoutgini <- c()
         holdoutprofit <- c()
         holdouttdl <- c()
         
+        # I changed the iterator b to g to test different seeds
+        b <- g+30
         #-----------------------------------------#
         # Uplift Models for Retention and Margins #
         #-----------------------------------------#
@@ -711,10 +713,10 @@ for (r_error_fraction in r_error_fractions) {
         paste0(
           "results_with_error_fractions_r_",r_error_fraction,"_m_",m_error_fraction,'_tau_',tau_error_fraction),
         result_buffer_list)
-      save.image("results/cv30_fractions_5x2x3_nobs_2000.RData", compress = TRUE)
+      save.image("results/cv100_fractions_5x2x3_nobs_5000_dgp_from_binary_dist.RData", compress = TRUE)
       
       end_time <- Sys.time()
-      print(paste("Single fraction examination time elapsed:", round(end_time - start_time_fraction,2),"min"))
+      print(paste("Single fraction examination time elapsed:", round(end_time - start_time_fraction,2),"hours"))
       end_time - start_time_fraction
     }
 
@@ -725,7 +727,7 @@ print('Total Time Elapsed:')
 end_time - start_time
 
 
-save.image("results/cv30_fractions_5x2x3_nobs_2000.RData", compress = TRUE)
+save.image("results/cv100_fractions_5x2x3_nobs_5000_dgp_from_binary_dist.RData", compress = TRUE)
 
 
 
