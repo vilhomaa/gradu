@@ -1,7 +1,7 @@
 
 rm(list = ls())
 setwd("Z:/skolarbete/gradu/R")
-load("results/cv100_fractions_5x2x3_nobs_5000.RData")
+load("results/TESTRESULTS1.RData")
 nobs <- 5000
 
 # use this code to copy paste all the variables below
@@ -78,8 +78,7 @@ for (var in ls(pattern = 'results_with')) {
   fraction_vector <- c(fraction_vector,buffer_vec)
 }
 
-# T-test abut the profit distributiones
-# HERE!!!
+
 
 i <- 1
 for (item in results) {
@@ -119,26 +118,25 @@ for (colname in colnames(data)) {
 
 
 library(tidyr)
+library(ggthemes)
 data <- profit_df
 data <- gather(data,c('m_error_fraction','r_error_fractio'))
 
 data$m_error_fraction <- as.factor(data$m_error_fraction)
 profit_plot <- ggplot(data,aes(x = r_error_fraction))+
-  geom_line(aes(y = lift,color = 'Lift'), size = 1)+
-  geom_line(aes(y = classic_sgb, color = 'classic_sgb'), size = 1)+
-  geom_line(aes(y = classic_reordered_sgb, color = 'classic_reordered_sgb'), size = 1)+
-  geom_line(aes(y = profitloss_leftw, color = 'profitloss_leftw'), size = 1)+
-  geom_line(aes(y = profitloss_rightw, color = 'profitloss_rightw'), size = 1)+
-  geom_line(aes(y = profitloss_symmw, color = 'profitloss_symmw'), size = 1)+
+  geom_line(aes(y = lift,color = 'Uplift RF'), size = 1)+
+  geom_line(aes(y = classic_sgb, color = 'SGB'), size = 1)+
+  geom_line(aes(y = classic_reordered_sgb, color = 'Indirect CATE profit'), size = 1)+
+  geom_line(aes(y = profitloss_leftw, color = 'Lemmens Gupta leftw'), size = 1)+
+  geom_line(aes(y = profitloss_rightw, color = 'Lemmens Gupta rightw'), size = 1)+
+  geom_line(aes(y = profitloss_symmw, color = 'Lemmens Gupta symmw'), size = 1)+
   facet_grid(m_error_fraction~tau_error_fraction,labeller = label_both)+
-  scale_colour_manual("", 
-                      breaks = c("Lift", "classic_sgb", "classic_reordered_sgb","profitloss_leftw","profitloss_rightw","profitloss_symmw"),
-                      values = c("red", "blue", "orange",'black',"purple","green"))+
-  ggtitle('Profits')
+  ggtitle('Profits for all sets of error parameters') +
+  ylab("Profit") +
+  theme_test() +
+  scale_colour_calc(name = "Scoring method")
 
-profit_plot
-
-
+profit_plot 
 
 
 
@@ -148,7 +146,16 @@ profit_plot
 extract_lift_data <- function(result_list,variable){
   curve <- colMeans(result_list[[variable]])
   n <- length(curve)
-  modelname <- substr(variable,32,nchar(variable))
+  # change model name
+  modelname <- str_replace_all(
+    variable,
+    c(
+      "holdoutcampaign.profit.curve.mysgbmodel" = "SGB",
+      "holdoutcampaign.profit.curve.myrsgbmodel" = "Indirect CATE profit", 
+      "holdoutcampaign.profit.curve.myliftmodel" = "Uplift RF",
+      'holdoutcampaign.profit.curve.mywsgbmodel' = "Lemmens Gupta leftw",
+      'holdoutcampaign.profit.curve.mywsgb2model' = "Lemmens Gupta rightw",
+      'holdoutcampaign.profit.curve.mywsgb3model' = "Lemmens Gupta symmw"))
   return(data.frame(
     list(
       lift = curve,
@@ -166,6 +173,8 @@ model_profitcurve_names <- c(
   'holdoutcampaign.profit.curve.mywsgb2model',
   'holdoutcampaign.profit.curve.mywsgb3model'
 )
+
+
 
 
 lift_curve_df <- data.frame()
@@ -191,6 +200,10 @@ for (i in seq_along(results)) {
 }
 
 
+# now the cumulative profits are so that 1 increment = 2%
+# -> x-axis goes from 1 to 50
+# -> change that it goes from 1 to 100
+lift_curve_df$customer_fraction <- lift_curve_df$customer_fraction*2
 
 
 
@@ -269,17 +282,23 @@ plot_m1 <- ggplot(data = lift_curve_df[which(lift_curve_df$m_error_fraction==1),
   geom_line(size = 1)+
   facet_grid(tau_error_fraction~r_error_fraction,labeller = label_both)+
   ggtitle('Lift curves when m_error_fraction = 1')+
-  ylab('Lift $')
+  ylab('Lift $') +
+  theme_test() +
+  scale_colour_calc(name = "Scoring method")+ 
+  theme(legend.text=element_text(size=8))
 
 plot_m0 <- ggplot(data = lift_curve_df[which(lift_curve_df$m_error_fraction==0),],aes(x = customer_fraction,y = lift,group = model,color=model))+
   geom_line(size = 1)+
   facet_grid(tau_error_fraction~r_error_fraction,labeller = label_both)+
   ggtitle('Lift curves when m_error_fraction = 0')+
-  ylab('Lift $')
+  ylab('Lift $') +
+  theme_test() +
+  scale_colour_calc(name = "Scoring method")+ 
+  theme(legend.text=element_text(size=8))
 
 
 
-
+#  JAKTA! MUUTA DESCRIPTIONIT
 plot_m1
 plot_m0
 
