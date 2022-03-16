@@ -10,7 +10,7 @@ main_analysis_run_parallel.R does the same but by using all cores -> runtime app
 
 analysis_of_results.R conducts the analyses done in section 4.
 
-dgp_summary.R does the analysis in appendix 3
+dgp_summary.R does the analysis in appendix 2
 
 forest_comparison.R does the analysis in appendix 6
 
