@@ -2,7 +2,7 @@
 
 Code for my Master's thesis'.
 
-The dgp.R is the data generating process I defined in section 3.1
+The dgp_y_from_binary_dist.R is the data generating process I defined in section 3.1, dgp.R is used in its stead in 4.3's last analysis.
 
 main_analysis.R executes the analysis as I set it up in part 3.2
 
